@@ -18,7 +18,7 @@
  * filter
  *
  * @package    filter_stream
- * @copyright  2023 mattandor <mattan@centricapp.co>
+ * @copyright  2023 mattandor <mattan@centricapp.co.il>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class filter_stream extends moodle_text_filter {
@@ -28,9 +28,6 @@ class filter_stream extends moodle_text_filter {
     public function __construct($context, array $localconfig) {
         parent::__construct($context, $localconfig);
         global $CFG;
-
-        $this->width = $CFG->filter_stream_width;
-        $this->height = $CFG->filter_stream_height;
     }
 
     public function filter($text, array $options = array()) {
@@ -40,10 +37,10 @@ class filter_stream extends moodle_text_filter {
             return $text;
         }
 
-        if (strpos($text, 'watch.php') !== false) {
+        if (strpos($text, 'watch') !== false) {
 
             // Define the pattern for matching URLs with any domain in text
-            $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\.php\?id=(\d+))\1[^>]*>.*?<\/a>/i';
+            $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
 
             // Replace matched URLs with the video tag
             $replacement = '<video controls width="100%">

@@ -18,7 +18,7 @@
  * version
  *
  * @package    filter_stream
- * @copyright  2023 mattandor <mattan@centricapp.co>
+ * @copyright  2023 mattandor <mattan@centricapp.co.il>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
