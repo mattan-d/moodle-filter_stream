@@ -43,11 +43,7 @@ class filter_stream extends moodle_text_filter {
             $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
 
             // Replace matched URLs with the video tag
-            $replacement = '<video controls width="100%">
-                        <source src="https://$3/cdn/$4/embed.mp4" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>';
-
+            $replacement = '<iframe src="https://$3/embed/$4" width="100%" height="600" frameborder="0" allowfullscreen></iframe>';
             $text = preg_replace($pattern, $replacement, $text);
 
             return $text;
