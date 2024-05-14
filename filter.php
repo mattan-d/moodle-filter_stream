@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * filter
  *
@@ -22,27 +24,24 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class filter_stream extends moodle_text_filter {
-    private $height;
-    private $width;
 
     public function __construct($context, array $localconfig) {
         parent::__construct($context, $localconfig);
-        global $CFG;
     }
 
     public function filter($text, array $options = array()) {
 
         if (!is_string($text) or empty($text)) {
-            // non string data can not be filtered anyway
+            // non string data can not be filtered anyway.
             return $text;
         }
 
         if (strpos($text, 'watch') !== false) {
 
-            // Define the pattern for matching URLs with any domain in text
+            // Define the pattern for matching URLs with any domain in text.
             $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
 
-            // Replace matched URLs with the video tag
+            // Replace matched URLs with the video tag.
             $replacement = '<iframe src="https://$3/embed/$4" width="100%" height="640" frameborder="0" allowfullscreen></iframe>';
             $text = preg_replace($pattern, $replacement, $text);
 

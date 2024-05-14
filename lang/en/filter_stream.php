@@ -18,12 +18,7 @@
  * string
  *
  * @package    filter_stream
- * @copyright  2023 mattandor <mattan@centricapp.co>
+ * @copyright  2024 mattandor <mattan@centricapp.co.il>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-$string['filtername'] = 'STREAM by CentricApp';
-$string['width'] = 'Frame Width';
-$string['configwidth'] = 'The width (in pixels) of the embedded video frame';
-$string['height'] = 'Frame Height';
-$string['configheight'] = 'The height (in pixels) of the embedded video frame';
+$string['filtername'] = 'Stream by CentricApp';
