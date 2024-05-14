@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * filter
  *
@@ -25,14 +23,17 @@ defined('MOODLE_INTERNAL') || die();
  */
 class filter_stream extends moodle_text_filter {
 
-    public function __construct($context, array $localconfig) {
-        parent::__construct($context, $localconfig);
-    }
+    /**
+     * Filter the text content to embed videos from URLs.
+     *
+     * @param string $text The text content to filter.
+     * @param array $options An array of options (not used in this method).
+     * @return string The filtered text content.
+     */
+    public function filter($text, array $options = []) {
 
-    public function filter($text, array $options = array()) {
-
-        if (!is_string($text) or empty($text)) {
-            // non string data can not be filtered anyway.
+        if (!is_string($text) || empty($text)) {
+            // Non string data can not be filtered anyway.
             return $text;
         }
 
