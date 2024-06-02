@@ -39,11 +39,13 @@ class filter_stream extends moodle_text_filter {
 
         if (strpos($text, 'watch') !== false) {
 
+            $config = get_config('local_stream');
             // Define the pattern for matching URLs with any domain in text.
             $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
 
             // Replace matched URLs with the video tag.
-            $replacement = '<iframe src="https://$3/embed/$4" width="100%" height="640" frameborder="0" allowfullscreen></iframe>';
+            $replacement = '<iframe src="https://$3/embed/$4?sesskey=' . md5($config->streamkey) .
+                    '" width="100%" height="640" frameborder="0" allowfullscreen></iframe>';
             $text = preg_replace($pattern, $replacement, $text);
 
             return $text;
