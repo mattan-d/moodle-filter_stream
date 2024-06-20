@@ -20,6 +20,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 if ($ADMIN->fulltree) {
 
     $settings->add(new admin_setting_configtext('filter_stream/width', get_string('width', 'filter_stream'), null, '100%',
