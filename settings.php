@@ -1,6 +1,4 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
-//
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -15,13 +13,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * string
+ * version
  *
  * @package    filter_stream
- * @copyright  2024 mattandor <mattan@centricapp.co.il>
+ * @copyright  2023 mattandor <mattan@centricapp.co.il>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['filtername'] = 'Stream';
-$string['width'] = 'Player width';
-$string['height'] = 'Player height';
+if ($ADMIN->fulltree) {
+
+    $settings->add(new admin_setting_configtext('filter_stream/width', get_string('width', 'filter_stream'), null, '100%',
+            PARAM_TEXT, 10));
+
+    $settings->add(new admin_setting_configtext('filter_stream/height', get_string('height', 'filter_stream'), null, '640px',
+            PARAM_TEXT, 10));
+}

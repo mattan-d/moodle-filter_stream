@@ -40,21 +40,23 @@ class filter_stream extends moodle_text_filter {
         if (strpos($text, 'watch') !== false) {
 
             $config = get_config('local_stream');
+            $playerwidth = get_config('filter_stream', 'width');
+            $playerheight = get_config('filter_stream', 'height');
 
             // Define the pattern for matching URLs with any domain in text.
             $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
 
             // Replace matched URLs with the video tag.
             $replacement = '<iframe src="https://$3/embed/$4?token=' . md5($config->streamkey) .
-                    '" width="100%" height="640" frameborder="0" allowfullscreen></iframe>';
+                    '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
             $text = preg_replace($pattern, $replacement, $text);
 
             // Define the pattern for matching plain URLs with any domain in text.
             $plainpattern = '/(https:\/\/(\S+?)\/watch\/(\d+))/i';
 
             // Replace matched plain URLs with the video tag.
-            $plainreplacement = '<iframe src="https://$2/embed/$3?token=' . md5($config->streamkey) .
-                    '" width="100%" height="640" frameborder="0" allowfullscreen></iframe>';
+            $plainreplacement = '<iframe src="https://$3/embed/$4?token=' . md5($config->streamkey) .
+                    '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
             $text = preg_replace($plainpattern, $plainreplacement, $text);
 
             return $text;
