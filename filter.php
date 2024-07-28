@@ -38,7 +38,6 @@ class filter_stream extends moodle_text_filter {
             return $text;
         }
 
-
         if (isset($PAGE->course->shortname)) {
             $audio = false;
             $substrings = ['HM', 'HB', 'HW'];
