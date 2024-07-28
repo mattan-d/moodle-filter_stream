@@ -42,7 +42,7 @@ class filter_stream extends moodle_text_filter {
             $audio = false;
             $substrings = ['HM', 'HB', 'HW'];
             foreach ($substrings as $substring) {
-                if (strpos($PAGE->course->shortname, $substring) !== false) {
+                if (preg_match("/\b$substring\b/", $PAGE->course->shortname)) {
                     $audio = true;
                 }
             }
