@@ -31,10 +31,22 @@ class filter_stream extends moodle_text_filter {
      * @return string The filtered text content.
      */
     public function filter($text, array $options = []) {
+        global $PAGE;
 
         if (!is_string($text) || empty($text)) {
             // Non string data can not be filtered anyway.
             return $text;
+        }
+
+
+        if (isset($PAGE->course->shortname)) {
+            $audio = false;
+            $substrings = ['HM', 'HB', 'HW'];
+            foreach ($substrings as $substring) {
+                if (strpos($PAGE->course->shortname, $substring) !== false) {
+                    $audio = true;
+                }
+            }
         }
 
         if (strpos($text, 'watch') !== false) {
@@ -47,7 +59,8 @@ class filter_stream extends moodle_text_filter {
             $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
 
             // Replace matched URLs with the video tag.
-            $replacement = '<iframe src="https://$3/embed/$4?token=' . md5($config->streamkey) .
+            $replacement =
+                    '<iframe src="https://$3/embed/$4?' . ($audio ? 'onlyaudio=1&' : '') . 'token=' . md5($config->streamkey) .
                     '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
             $text = preg_replace($pattern, $replacement, $text);
 
@@ -55,7 +68,8 @@ class filter_stream extends moodle_text_filter {
             $plainpattern = '/(https:\/\/(\S+?)\/watch\/(\d+))/i';
 
             // Replace matched plain URLs with the video tag.
-            $plainreplacement = '<iframe src="https://$3/embed/$4?token=' . md5($config->streamkey) .
+            $plainreplacement =
+                    '<iframe src="https://$3/embed/$4?' . ($audio ? 'onlyaudio=1&' : '') . 'token=' . md5($config->streamkey) .
                     '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
             $text = preg_replace($plainpattern, $plainreplacement, $text);
 
