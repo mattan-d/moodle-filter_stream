@@ -40,11 +40,12 @@ class filter_stream extends moodle_text_filter {
 
         if (isset($PAGE->course->shortname)) {
             $audio = false;
-            $substrings = ['HM', 'HB', 'HW'];
-            foreach ($substrings as $substring) {
-                if (preg_match("/\b$substring\b/", $PAGE->course->shortname)) {
-                    $audio = true;
-                }
+            // Pattern to match strings ending with "-HM", "-HB", or "-HW"
+            $pattern = '/.*-(HM|HB|HW)/';
+
+            // Check if the string matches the pattern
+            if (preg_match($pattern, $PAGE->course->shortname, $matches)) {
+                $audio = true;
             }
         }
 
