@@ -60,7 +60,7 @@ class filter_stream extends moodle_text_filter {
 
             // Replace matched URLs with the video tag.
             $replacement =
-                    '<iframe src="https://$3/embed/$4?' . ($audio ? 'onlyaudio=1&' : '') . 'token=' . md5($config->streamkey) .
+                    '<iframe src="https://$3/embed/$4?token=' . md5($config->streamkey) .
                     '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
 
             if ($audio) {
