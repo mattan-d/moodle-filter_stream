@@ -62,6 +62,14 @@ class filter_stream extends moodle_text_filter {
             $replacement =
                     '<iframe src="https://$3/embed/$4?' . ($audio ? 'onlyaudio=1&' : '') . 'token=' . md5($config->streamkey) .
                     '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
+
+            if ($audio) {
+                $replacement .=
+                        '<iframe src="https://$3/embed-audio/$4?' . ($audio ? 'onlyaudio=1&' : '') . 'token=' .
+                        md5($config->streamkey) .
+                        '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
+            }
+
             $text = preg_replace($pattern, $replacement, $text);
 
             // Define the pattern for matching plain URLs with any domain in text.
