@@ -66,13 +66,13 @@ class filter_stream extends moodle_text_filter {
 
             $text = preg_replace($pattern, $replacement, $text);
 
-            if ($audio) {
+/*            if ($audio) {
                 // Replace matched URLs with the video tag.
                 $replacement =
                         '<iframe src="https://$3/embed-audio/$4?token=' . md5($config->streamkey) .
                         '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
                 $text = preg_replace($pattern, $replacement, $origintext);
-            }
+            }*/
 
             // Define the pattern for matching plain URLs with any domain in text.
             $plainpattern = '/(https:\/\/(\S+?)\/watch\/(\d+))/i';
