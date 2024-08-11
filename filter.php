@@ -58,17 +58,19 @@ class filter_stream extends moodle_text_filter {
             // Define the pattern for matching URLs with any domain in text.
             $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
 
+            if ($audio) {
+                $replacement =
+                        '<h1>הקלטת שמע ללא וידאו</h1> <hr> <iframe src="https://$3/embed-audio/$4?' .
+                        ($audio ? 'onlyaudio=1&' : '') . 'token=' .
+                        md5($config->streamkey) .
+                        '" width="' . $playerwidth . '" height="' . $playerheight .
+                        '" frameborder="0" allowfullscreen></iframe> <hr>';
+            }
+
             // Replace matched URLs with the video tag.
-            $replacement =
+            $replacement .=
                     '<iframe src="https://$3/embed/$4?token=' . md5($config->streamkey) .
                     '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
-
-            if ($audio) {
-                $replacement .=
-                        '<iframe src="https://$3/embed-audio/$4?' . ($audio ? 'onlyaudio=1&' : '') . 'token=' .
-                        md5($config->streamkey) .
-                        '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
-            }
 
             $text = preg_replace($pattern, $replacement, $text);
 
