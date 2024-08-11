@@ -63,8 +63,7 @@ class filter_stream extends moodle_text_filter {
                         '<h1>הקלטת שמע ללא וידאו</h1> <hr> <iframe src="https://$3/embed-audio/$4?' .
                         ($audio ? 'onlyaudio=1&' : '') . 'token=' .
                         md5($config->streamkey) .
-                        '" width="' . $playerwidth . '" height="' . $playerheight .
-                        '" frameborder="0" allowfullscreen></iframe> <hr>';
+                        '" width="100%" height="150px" frameborder="0" allowfullscreen></iframe> <hr>';
             }
 
             // Replace matched URLs with the video tag.
