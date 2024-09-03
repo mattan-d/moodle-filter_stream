@@ -1,6 +1,6 @@
 # Stream Filter Moodle Plugin
 
-![Stream Logo](https://stream-platform.cloud/images/logo.svg)
+![Stream Logo]([https://stream-platform.cloud/images/logo.svg](https://centricstream.co.il/images/logo.svg))
 
 
 [![Maintained by Mattan Dor (CentricApp)](https://img.shields.io/badge/Maintained%20by-Mattan%20Dor%20(CentricApp)-brightgreen)](https://centricapp.co.il)
