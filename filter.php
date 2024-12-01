@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+require_once($CFG->dirroot . '/mod/stream/locallib.php');
+
 /**
  * filter
  *
@@ -31,7 +33,7 @@ class filter_stream extends moodle_text_filter {
      * @return string The filtered text content.
      */
     public function filter($text, array $options = []) {
-        global $PAGE;
+        global $PAGE, $USER;
 
         if (!is_string($text) || empty($text)) {
             // Non string data can not be filtered anyway.
@@ -49,40 +51,52 @@ class filter_stream extends moodle_text_filter {
             }
         }
 
-        if (strpos($text, 'watch') !== false) {
+        // Define the pattern for matching URLs with any domain in text.
+        $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
 
-            $config = get_config('local_stream');
-            $playerwidth = get_config('filter_stream', 'width');
-            $playerheight = get_config('filter_stream', 'height');
+        if (preg_match($pattern, $text, $matches)) {
+            if (strpos($text, 'watch') !== false) {
 
-            // Define the pattern for matching URLs with any domain in text.
-            $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
+                $playerwidth = get_config('filter_stream', 'width');
+                $playerheight = get_config('filter_stream', 'height');
 
-            if ($audio) {
-                $replacement =
-                        '<h1>הקלטת שמע ללא וידאו</h1> <hr> <iframe src="https://$3/embed-audio/$4?' .
-                        ($audio ? 'onlyaudio=1&' : '') . 'token=' .
-                        md5($config->streamkey) .
-                        '" width="100%" height="150px" frameborder="0" allowfullscreen></iframe> <hr>';
+                $videoId = $matches[4];
+                $payload = [
+                        'identifier' => $videoId,
+                        'fullname' => fullname($USER),
+                        'email' => $USER->email,
+                ];
+
+                $jwt = \mod_stream\local\jwt_helper::encode(get_config('stream', 'accountid'), $payload);
+
+                // Define the pattern for matching URLs with any domain in text.
+                $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
+
+                if ($audio) {
+                    $replacement =
+                            '<h1>הקלטת שמע ללא וידאו</h1> <hr> <iframe src="https://$3/embed-audio/$4?' .
+                            ($audio ? 'onlyaudio=1&' : '') . 'token=' . $jwt .
+                            '" width="100%" height="150px" frameborder="0" allowfullscreen></iframe> <hr>';
+                }
+
+                // Replace matched URLs with the video tag.
+                $replacement .=
+                        '<iframe src="https://$3/embed/$4?token=' . $jwt .
+                        '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
+
+                $text = preg_replace($pattern, $replacement, $text);
+
+                // Define the pattern for matching plain URLs with any domain in text.
+                $plainpattern = '/(https:\/\/(\S+?)\/watch\/(\d+))/i';
+
+                // Replace matched plain URLs with the video tag.
+                $plainreplacement =
+                        '<iframe src="https://$3/embed/$4?token=' . md5($config->streamkey) .
+                        '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
+                $text = preg_replace($plainpattern, $plainreplacement, $text);
+
+                return $text;
             }
-
-            // Replace matched URLs with the video tag.
-            $replacement .=
-                    '<iframe src="https://$3/embed/$4?token=' . md5($config->streamkey) .
-                    '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
-
-            $text = preg_replace($pattern, $replacement, $text);
-
-            // Define the pattern for matching plain URLs with any domain in text.
-            $plainpattern = '/(https:\/\/(\S+?)\/watch\/(\d+))/i';
-
-            // Replace matched plain URLs with the video tag.
-            $plainreplacement =
-                    '<iframe src="https://$3/embed/$4?token=' . md5($config->streamkey) .
-                    '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
-            $text = preg_replace($plainpattern, $plainreplacement, $text);
-
-            return $text;
         }
 
         return $text;
