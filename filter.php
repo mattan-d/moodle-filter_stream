@@ -32,73 +32,118 @@ class filter_stream extends moodle_text_filter {
      * @param array $options An array of options (not used in this method).
      * @return string The filtered text content.
      */
+    /**
+     * Filters the given text to replace video links with embedded iframes,
+     * and optionally includes audio-only support based on course shortname.
+     *
+     * @param string $text The text to filter.
+     * @param array $options Additional options for filtering (not used).
+     * @return string The filtered text with video or audio links replaced.
+     */
     public function filter($text, array $options = []) {
         global $PAGE, $USER;
 
         if (!is_string($text) || empty($text)) {
-            // Non string data can not be filtered anyway.
+            // Return non-string data unmodified.
             return $text;
         }
 
-        if (isset($PAGE->course->shortname)) {
-            $audio = false;
-            // Pattern to match strings ending with "-HM", "-HB", or "-HW"
-            $pattern = '/.*-(HM|HB|HW|HS)/';
+        // Check if audio-only mode is required based on the course shortname.
+        $audio = $this->is_audio_only_mode($PAGE);
 
-            // Check if the string matches the pattern
-            if (preg_match($pattern, $PAGE->course->shortname, $matches)) {
-                $audio = true;
-            }
+        if (strpos($text, 'watch') === false) {
+            // Return text unmodified if no relevant links are detected.
+            return $text;
         }
 
-        // Define the pattern for matching URLs with any domain in text.
-        $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
+        // Retrieve the player dimensions from the plugin configuration.
+        $playerwidth = get_config('filter_stream', 'width');
+        $playerheight = get_config('filter_stream', 'height');
 
-        if (preg_match($pattern, $text, $matches)) {
-            if (strpos($text, 'watch') !== false) {
+        // Process anchor tag links.
+        $text = $this->replace_links_with_media(
+                $text,
+                '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i',
+                $playerwidth,
+                $playerheight,
+                $audio,
+                $USER
+        );
 
-                $playerwidth = get_config('filter_stream', 'width');
-                $playerheight = get_config('filter_stream', 'height');
-
-                $videoId = $matches[4];
-                $payload = [
-                        'identifier' => $videoId,
-                        'fullname' => fullname($USER),
-                        'email' => $USER->email,
-                ];
-
-                $jwt = \mod_stream\local\jwt_helper::encode(get_config('stream', 'accountid'), $payload);
-
-                // Define the pattern for matching URLs with any domain in text.
-                $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
-
-                if ($audio) {
-                    $replacement =
-                            '<h1>הקלטת שמע ללא וידאו</h1> <hr> <iframe src="https://$3/embed-audio/$4?' .
-                            ($audio ? 'onlyaudio=1&' : '') . 'token=' . $jwt .
-                            '" width="100%" height="150px" frameborder="0" allowfullscreen></iframe> <hr>';
-                }
-
-                // Replace matched URLs with the video tag.
-                $replacement .=
-                        '<iframe src="https://$3/embed/$4?token=' . $jwt .
-                        '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
-
-                $text = preg_replace($pattern, $replacement, $text);
-
-                // Define the pattern for matching plain URLs with any domain in text.
-                $plainpattern = '/(https:\/\/(\S+?)\/watch\/(\d+))/i';
-
-                // Replace matched plain URLs with the video tag.
-                $plainreplacement =
-                        '<iframe src="https://$3/embed/$4?token=' . md5($config->streamkey) .
-                        '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
-                $text = preg_replace($plainpattern, $plainreplacement, $text);
-
-                return $text;
-            }
-        }
+        // Process plain text links.
+        $text = $this->replace_links_with_media(
+                $text,
+                '/(https:\/\/(\S+?)\/watch\/(\d+))/i',
+                $playerwidth,
+                $playerheight,
+                $audio,
+                $USER
+        );
 
         return $text;
+    }
+
+    /**
+     * Checks if audio-only mode should be enabled based on the course shortname.
+     *
+     * @param stdClass $page The current page object.
+     * @return bool True if audio-only mode is enabled, false otherwise.
+     */
+    private function is_audio_only_mode($page) {
+        if (!isset($page->course->shortname)) {
+            return false;
+        }
+
+        $pattern = '/.*-(HM|HB|HW|HS)/';
+        return (bool) preg_match($pattern, $page->course->shortname);
+    }
+
+    /**
+     * Replaces matched video links in the text with embedded media (video or audio).
+     *
+     * @param string $text The text containing video links.
+     * @param string $pattern The regex pattern to match video links.
+     * @param int $width The width of the iframe player.
+     * @param int $height The height of the iframe player.
+     * @param bool $audio Whether to enable audio-only mode.
+     * @param stdClass $user The current user object for JWT payload generation.
+     * @return string The text with video or audio links replaced by iframe tags.
+     */
+    private function replace_links_with_media($text, $pattern, $width, $height, $audio, $user) {
+        return preg_replace_callback($pattern, function($matches) use ($width, $height, $audio, $user) {
+            $videoid = $matches[count($matches) - 1]; // Last matched group is the video ID.
+            $host = $matches[count($matches) - 2];   // Second to last matched group is the domain.
+
+            $payload = [
+                    'identifier' => $videoid,
+                    'fullname' => fullname($user),
+                    'email' => $user->email,
+            ];
+
+            $jwt = \mod_stream\local\jwt_helper::encode(get_config('stream', 'accountid'), $payload);
+
+            if ($audio) {
+                // Return an audio-only iframe if audio mode is enabled.
+                return html_writer::tag('h1', get_string('audio_recording', 'filter_stream')) .
+                        html_writer::empty_tag('hr') .
+                        html_writer::tag('iframe', '', [
+                                'src' => "https://$host/embed-audio/$videoid?onlyaudio=1&token=$jwt",
+                                'width' => '100%',
+                                'height' => '150px',
+                                'frameborder' => '0',
+                                'allowfullscreen' => 'allowfullscreen',
+                        ]) .
+                        html_writer::empty_tag('hr');
+            }
+
+            // Return a video iframe for standard mode.
+            return html_writer::tag('iframe', '', [
+                    'src' => "https://$host/embed/$videoid?token=$jwt",
+                    'width' => $width,
+                    'height' => $height,
+                    'frameborder' => '0',
+                    'allowfullscreen' => 'allowfullscreen',
+            ]);
+        }, $text);
     }
 }
