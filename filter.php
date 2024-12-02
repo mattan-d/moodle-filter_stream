@@ -26,55 +26,81 @@ require_once($CFG->dirroot . '/mod/stream/locallib.php');
 class filter_stream extends moodle_text_filter {
 
     /**
-     * Filter the text content to embed videos from URLs.
+     * Filters the given text to replace video links with embedded iframes.
      *
-     * @param string $text The text content to filter.
-     * @param array $options An array of options (not used in this method).
-     * @return string The filtered text content.
+     * @param string $text The text to filter.
+     * @param array $options Additional options for filtering (not used).
+     * @return string The filtered text with video links replaced.
      */
     public function filter($text, array $options = []) {
         global $USER;
 
         if (!is_string($text) || empty($text)) {
-            // Non string data can not be filtered anyway.
+            // Return non-string data unmodified.
             return $text;
         }
 
-        if (strpos($text, 'watch') !== false) {
-
-            $playerwidth = get_config('filter_stream', 'width');
-            $playerheight = get_config('filter_stream', 'height');
-
-            // Define the pattern for matching URLs with any domain in text.
-            $pattern = '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i';
-
-            if (preg_match($pattern, $text, $matches)) {
-                $videoId = $matches[4];
-                $payload = [
-                        'identifier' => $videoId,
-                        'fullname' => fullname($USER),
-                        'email' => $USER->email,
-                ];
-
-                $jwt = \mod_stream\local\jwt_helper::encode(get_config('stream', 'accountid'), $payload);
-
-                // Replace matched URLs with the video tag.
-                $replacement = '<iframe src="https://$3/embed/$4?token=' . $jwt .
-                        '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
-                $text = preg_replace($pattern, $replacement, $text);
-
-                // Define the pattern for matching plain URLs with any domain in text.
-                $plainpattern = '/(https:\/\/(\S+?)\/watch\/(\d+))/i';
-
-                // Replace matched plain URLs with the video tag.
-                $plainreplacement = '<iframe src="https://$3/embed/$4?token=' . $jwt .
-                        '" width="' . $playerwidth . '" height="' . $playerheight . '" frameborder="0" allowfullscreen></iframe>';
-                $text = preg_replace($plainpattern, $plainreplacement, $text);
-            }
-
+        if (strpos($text, 'watch') === false) {
+            // Return text unmodified if no relevant links are detected.
             return $text;
         }
+
+        // Retrieve the player dimensions from the plugin configuration.
+        $playerwidth = get_config('filter_stream', 'width');
+        $playerheight = get_config('filter_stream', 'height');
+
+        // Process anchor tag links.
+        $text = $this->replace_links_with_iframes(
+                $text,
+                '/<a\s+[^>]*href=(["\'])(https:\/\/(\S+?)\/watch\/(\d+))\1[^>]*>.*?<\/a>/i',
+                $playerwidth,
+                $playerheight,
+                $USER
+        );
+
+        // Process plain text links.
+        $text = $this->replace_links_with_iframes(
+                $text,
+                '/(https:\/\/(\S+?)\/watch\/(\d+))/i',
+                $playerwidth,
+                $playerheight,
+                $USER
+        );
 
         return $text;
+    }
+
+    /**
+     * Replaces matched video links in the text with embedded iframe tags.
+     *
+     * @param string $text The text containing video links.
+     * @param string $pattern The regex pattern to match video links.
+     * @param int $width The width of the iframe player.
+     * @param int $height The height of the iframe player.
+     * @param stdClass $user The current user object for JWT payload generation.
+     * @return string The text with video links replaced by iframe tags.
+     */
+    private function replace_links_with_iframes($text, $pattern, $width, $height, $user) {
+        return preg_replace_callback($pattern, function($matches) use ($width, $height, $user) {
+            $videoid = $matches[count($matches) - 1]; // Last matched group is the video ID.
+            $host = $matches[count($matches) - 2];   // Second to last matched group is the domain.
+
+            $payload = [
+                    'identifier' => $videoid,
+                    'fullname' => fullname($user),
+                    'email' => $user->email,
+            ];
+
+            $jwt = \mod_stream\local\jwt_helper::encode(get_config('stream', 'accountid'), $payload);
+
+            // Generate the iframe replacement.
+            return html_writer::tag('iframe', '', [
+                    'src' => "https://$host/embed/$videoid?token=$jwt",
+                    'width' => $width,
+                    'height' => $height,
+                    'frameborder' => '0',
+                    'allowfullscreen' => 'allowfullscreen',
+            ]);
+        }, $text);
     }
 }
