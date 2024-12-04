@@ -25,3 +25,4 @@
 $string['filtername'] = 'Stream';
 $string['width'] = 'Player width';
 $string['height'] = 'Player height';
+$string['audio_recording'] = 'Audio Recording';

@@ -123,9 +123,10 @@ class filter_stream extends moodle_text_filter {
 
             $jwt = \mod_stream\local\jwt_helper::encode(get_config('stream', 'accountid'), $payload);
 
+            $html = '';
             if ($audio) {
                 // Return an audio-only iframe if audio mode is enabled.
-                return html_writer::tag('h1', get_string('audio_recording', 'filter_stream')) .
+                $html .= html_writer::tag('h1', get_string('audio_recording', 'filter_stream')) .
                         html_writer::empty_tag('hr') .
                         html_writer::tag('iframe', '', [
                                 'src' => "https://$host/embed-audio/$videoid?onlyaudio=1&token=$jwt",
@@ -138,13 +139,15 @@ class filter_stream extends moodle_text_filter {
             }
 
             // Return a video iframe for standard mode.
-            return html_writer::tag('iframe', '', [
+            $html .= html_writer::tag('iframe', '', [
                     'src' => "https://$host/embed/$videoid?token=$jwt",
                     'width' => $width,
                     'height' => $height,
                     'frameborder' => '0',
                     'allowfullscreen' => 'allowfullscreen',
             ]);
+
+            return $html;
         }, $text);
     }
 }
